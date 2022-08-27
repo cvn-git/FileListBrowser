@@ -36,7 +36,9 @@ public:
     const std::string& name() const {return name_;}
     const FolderNode* parent() const {return parent_;}
 
+    static void loadFileList(const std::string& filePath, FolderNode& rootNode);
     static void loadWindowFileList(const std::string& filePath, FolderNode& rootNode);
+    static void loadLinuxFileList(const std::string& filePath, FolderNode& rootNode);
 
 private:
     const std::string name_;

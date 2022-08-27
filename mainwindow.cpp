@@ -38,8 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowIcon(icons_.icon(QFileIconProvider::Folder));
 
     // Menu
-    auto action = new QAction("Open", this);
-    menuBar()->addMenu("&File")->addAction(action);
+    auto action = new QAction("Open");
+    menuBar()->addMenu("File")->addAction(action);
     connect(action, &QAction::triggered, this, &MainWindow::openFile);
 
     // Status bar
@@ -101,7 +101,7 @@ void MainWindow::openFile()
         statusBar_->showMessage(tr("Reading file list from ") + filePath);
         statusBar_->repaint();
 
-        FolderNode::loadWindowFileList(filePath.toStdString(), rootNode_);
+        FolderNode::loadFileList(filePath.toStdString(), rootNode_);
 
         resetRootPath();
     }
@@ -128,7 +128,7 @@ void MainWindow::openPath(QTreeWidgetItem* item)
         auto item = new QTreeWidgetItem();
         item->setText(0, QString::fromStdString(pair.first));
         item->setText(1, QString::fromStdString(std::filesystem::path(pair.first).extension().string()));
-        item->setData(2, Qt::DisplayRole, info.fileSize);
+        item->setData(2, Qt::DisplayRole, QVariant::fromValue(info.fileSize));
         item->setData(3, Qt::DisplayRole, info.dateTime);
         item->setIcon(0, icons_.icon(QFileIconProvider::File));
         items.append(item);
