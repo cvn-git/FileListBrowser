@@ -45,18 +45,24 @@ void FolderNode::reset()
     files_.clear();
 }
 
-FolderNode& FolderNode::addSubDirectory(const std::string& name)
+FolderNode* FolderNode::addSubDirectory(const std::string& name)
 {
     if (files_.find(name) != files_.end())
     {
         throw std::invalid_argument("FolderNode::addSubDirectory(): file already exists");
     }
 
-    auto ret = subDirectories_.try_emplace(name, name, this);
-    return ret.first->second;
+    auto it = subDirectories_.find(name);
+    if (it == subDirectories_.end())
+    {
+        auto child = new FolderNode(this, name);
+        auto ret = subDirectories_.emplace(name, child);
+        it = ret.first;
+    }
+    return it->second;
 }
 
-FolderNode& FolderNode::getSubDirectory(const std::string& name, bool autoAdd)
+FolderNode* FolderNode::getSubDirectory(const std::string& name, bool autoAdd)
 {
     auto it = subDirectories_.find(name);
     if (it == subDirectories_.end())
@@ -86,7 +92,7 @@ void FolderNode::addFile(const std::string& name, const FileInfo& info)
     files_[name] = info;
 }
 
-void FolderNode::loadFileList(const std::string& filePath, FolderNode& rootNode)
+void FolderNode::loadFileList(const std::string& filePath, FolderNode* rootNode)
 {
     std::ifstream file(filePath);
     if (!file.is_open())
@@ -111,9 +117,9 @@ void FolderNode::loadFileList(const std::string& filePath, FolderNode& rootNode)
     }
 }
 
-void FolderNode::loadWindowFileList(const std::string& filePath, FolderNode& rootNode)
+void FolderNode::loadWindowFileList(const std::string& filePath, FolderNode* rootNode)
 {
-    rootNode.reset();
+    rootNode->reset();
     FolderNode *node = nullptr;
 
     std::ifstream file(filePath);
@@ -167,11 +173,11 @@ void FolderNode::loadWindowFileList(const std::string& filePath, FolderNode& roo
                     idx = newIdx + 1;
                 }
             }
-            node = &rootNode;
+            node = rootNode;
             for (const auto& name : names)
             {
                 //qDebug() << QString::fromStdString(name);
-                node = &node->getSubDirectory(name, true);
+                node = node->getSubDirectory(name, true);
             }
         }
         else
@@ -218,9 +224,9 @@ void FolderNode::loadWindowFileList(const std::string& filePath, FolderNode& roo
     }
 }
 
-void FolderNode::loadLinuxFileList(const std::string& filePath, FolderNode& rootNode)
+void FolderNode::loadLinuxFileList(const std::string& filePath, FolderNode* rootNode)
 {
-    rootNode.reset();
+    rootNode->reset();
     FolderNode *node = nullptr;
 
     std::ifstream file(filePath);
@@ -272,11 +278,11 @@ void FolderNode::loadLinuxFileList(const std::string& filePath, FolderNode& root
                     idx = newIdx + 1;
                 }
             }
-            node = &rootNode;
+            node = rootNode;
             for (const auto& name : names)
             {
                 //qDebug() << QString::fromStdString(name);
-                node = &node->getSubDirectory(name, true);
+                node = node->getSubDirectory(name, true);
             }
         }
         else

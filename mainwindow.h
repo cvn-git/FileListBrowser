@@ -13,20 +13,20 @@
 class TreePathItem : public QTreeWidgetItem
 {
 public:
-    TreePathItem(const FolderNode& node, TreePathItem* parent)
+    TreePathItem(FolderNode* node, TreePathItem* parent)
         : QTreeWidgetItem(parent)
         , node_{node}
     {}
 
-    TreePathItem(const FolderNode& node, QTreeWidget* parent)
+    TreePathItem(FolderNode* node, QTreeWidget* parent)
         : QTreeWidgetItem(parent)
         , node_{node}
     {}
 
-    const FolderNode& node() const {return node_;}
+    FolderNode* node() const {return node_;}
 
 private:
-    const FolderNode& node_;
+    FolderNode* node_;
 };
 
 
@@ -42,7 +42,7 @@ private:
     void openFile();
     void openPath(QTreeWidgetItem* item);
     void resetRootPath();
-    TreePathItem* addTreePathItem(const FolderNode& node, TreePathItem* parent = nullptr);
+    TreePathItem* addTreePathItem(FolderNode* node, TreePathItem* parent = nullptr);
 
     QFileIconProvider icons_;
     QTreeWidget* treePath_;
@@ -50,6 +50,6 @@ private:
     QStatusBar* statusBar_;
     QLineEdit* editAddress_;
 
-    FolderNode rootNode_;
+    FolderNode* rootNode_{nullptr};
 };
 #endif // MAINWINDOW_H

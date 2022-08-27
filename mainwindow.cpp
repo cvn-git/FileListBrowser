@@ -101,6 +101,12 @@ void MainWindow::openFile()
         statusBar_->showMessage(tr("Reading file list from ") + filePath);
         statusBar_->repaint();
 
+        if (rootNode_ != nullptr)
+        {
+            rootNode_->deleteLater();
+        }
+        rootNode_ = new FolderNode(this);
+
         FolderNode::loadFileList(filePath.toStdString(), rootNode_);
 
         resetRootPath();
@@ -117,11 +123,16 @@ void MainWindow::openPath(QTreeWidgetItem* item)
     treeFileList_->clear();
 
     // Process address
-    auto& node = dynamic_cast<TreePathItem&>(*item).node();
+    auto pathItem = dynamic_cast<TreePathItem*>(item);
+    if (pathItem == nullptr)
+    {
+        return;
+    }
+    auto node = pathItem->node();
 
     // List files
     QList<QTreeWidgetItem *> items;
-    for (const auto& pair : node.getFiles())
+    for (const auto& pair : node->getFiles())
     {
         const auto& info = pair.second;
 
@@ -137,11 +148,16 @@ void MainWindow::openPath(QTreeWidgetItem* item)
 
     // Display
     std::string pathName;
-    auto nodePtr = &node;
-    while (nodePtr->parent() != nullptr)
+    while (true)
     {
-        pathName = nodePtr->name() + "/" + pathName;
-        nodePtr = nodePtr->parent();
+        auto parent = dynamic_cast<FolderNode*>(node->parent());
+        if (parent == nullptr)
+        {
+            break;
+        }
+
+        pathName = node->name() + "/" + pathName;
+        node = parent;
     }
     editAddress_->setText(QString::fromStdString(pathName));
 
@@ -155,20 +171,20 @@ void MainWindow::resetRootPath()
     treeFileList_->clear();
 
     // Find starting node
-    const FolderNode* node = &rootNode_;
+    auto node = rootNode_;
     while ((node->getSubDirectories().size() == 1) && (node->getFiles().empty()))
     {
         auto it = node->getSubDirectories().begin();
-        node = &it->second;
+        node = it->second;
     }
 
     // Add starting node
-    auto item = addTreePathItem(*node);
+    auto item = addTreePathItem(node);
 
     treePath_->setCurrentItem(item);
 }
 
-TreePathItem* MainWindow::addTreePathItem(const FolderNode& node, TreePathItem* parent)
+TreePathItem* MainWindow::addTreePathItem(FolderNode* node, TreePathItem* parent)
 {
     TreePathItem* item = nullptr;
 
@@ -182,11 +198,11 @@ TreePathItem* MainWindow::addTreePathItem(const FolderNode& node, TreePathItem* 
         item = new TreePathItem(node, parent);
         parent->addChild(item);
     }
-    item->setText(0, QString::fromStdString(node.name()));
+    item->setText(0, QString::fromStdString(node->name()));
     item->setIcon(0, icons_.icon(QFileIconProvider::Folder));
 
     // Create child items
-    for (const auto& p : node.getSubDirectories())
+    for (const auto& p : node->getSubDirectories())
     {
         addTreePathItem(p.second, item);
     }
